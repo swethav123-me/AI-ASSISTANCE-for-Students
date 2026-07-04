@@ -1,4 +1,4 @@
-from app.services.ollama_service import ollama_service
+from app.services.ollama_service import llm_service
 
 
 class BaseAgent:
@@ -9,8 +9,5 @@ class BaseAgent:
         self.backstory = backstory
         self.system_prompt = system_prompt
 
-    def run(self, prompt: str) -> str:
-        return ollama_service.generate(prompt, system=self.system_prompt)
-
     def chat(self, messages: list[dict]) -> str:
-        return ollama_service.chat(messages)
+        return llm_service.chat(messages)

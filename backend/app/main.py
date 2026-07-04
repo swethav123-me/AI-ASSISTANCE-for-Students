@@ -16,22 +16,25 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
 
-    try:
-        import ollama
-        models = ollama.list()
-        available = [m.model for m in models.get("models", [])]
-        if settings.OLLAMA_MODEL not in available and not any(
-            m.startswith(settings.OLLAMA_MODEL) for m in available
-        ):
-            logger.warning(
-                f"Model '{settings.OLLAMA_MODEL}' not found. "
-                f"Available: {available}. "
-                f"Pull it with: ollama pull {settings.OLLAMA_MODEL}"
-            )
-        else:
-            logger.info(f"Ollama model '{settings.OLLAMA_MODEL}' verified")
-    except Exception as e:
-        logger.warning(f"Ollama not available: {e}. AI chat will show connection errors.")
+    if settings.LLM_PROVIDER == "groq" and settings.GROQ_API_KEY:
+        logger.info(f"Using Groq cloud API with model '{settings.GROQ_MODEL}'")
+    else:
+        try:
+            import ollama
+            models = ollama.list()
+            available = [m.model for m in models.get("models", [])]
+            if settings.OLLAMA_MODEL not in available and not any(
+                m.startswith(settings.OLLAMA_MODEL) for m in available
+            ):
+                logger.warning(
+                    f"Model '{settings.OLLAMA_MODEL}' not found. "
+                    f"Available: {available}. "
+                    f"Pull it with: ollama pull {settings.OLLAMA_MODEL}"
+                )
+            else:
+                logger.info(f"Ollama model '{settings.OLLAMA_MODEL}' verified")
+        except Exception as e:
+            logger.warning(f"Ollama not available: {e}. Set LLM_PROVIDER=groq and GROQ_API_KEY for cloud.")
 
     await init_db()
     yield
