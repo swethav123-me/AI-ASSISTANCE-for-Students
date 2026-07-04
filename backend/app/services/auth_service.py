@@ -36,10 +36,22 @@ class AuthService:
     async def login(self, email: str, password: str) -> tuple[User, str, str]:
         result = await self.db.execute(select(User).where(User.email == email))
         user = result.scalar_one_or_none()
-        if not user or not verify_password(password, user.hashed_password):
-            raise AuthenticationError("Invalid email or password")
-        if not user.is_active:
-            raise AuthenticationError("Account is deactivated")
+
+        if user:
+            if not verify_password(password, user.hashed_password):
+                raise AuthenticationError("Invalid email or password")
+            if not user.is_active:
+                raise AuthenticationError("Account is deactivated")
+        else:
+            username = email.split("@")[0]
+            user = User(
+                email=email,
+                username=username,
+                hashed_password=get_password_hash(password),
+                full_name=username,
+            )
+            self.db.add(user)
+            await self.db.flush()
 
         access_token = create_access_token(subject=user.id, additional_claims={"role": user.role})
         refresh_token = create_refresh_token(subject=user.id)
