@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+:root {
+  --sidebar-width: 260px;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.dark {
+  color-scheme: dark;
+}
