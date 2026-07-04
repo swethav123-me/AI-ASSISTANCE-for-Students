@@ -5,7 +5,7 @@ Loads all configuration from environment variables with validation.
 from functools import lru_cache
 from typing import List
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,7 +15,6 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        case_sensitive=True,
         extra="ignore",
     )
 
@@ -52,7 +51,23 @@ class Settings(BaseSettings):
     GROQ_MODEL: str = "llama3-70b-8192"
 
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000",
+        "https://ai-assistance-for-students.vercel.app",
+    ]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                import json
+                return json.loads(v)
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     # File Upload
     MAX_FILE_SIZE_MB: int = 10
