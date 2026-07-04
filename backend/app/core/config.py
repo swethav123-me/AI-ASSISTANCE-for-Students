@@ -51,13 +51,7 @@ class Settings(BaseSettings):
     GROQ_MODEL: str = "llama3-70b-8192"
 
     # CORS
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-        "https://ai-assistance-for-students.vercel.app",
-    ]
+    CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
@@ -65,8 +59,20 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             if v.startswith("[") and v.endswith("]"):
                 import json
-                return json.loads(v)
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
+                v = json.loads(v)
+            else:
+                v = [origin.strip() for origin in v.split(",") if origin.strip()]
+        if isinstance(v, list):
+            always = [
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:3000",
+                "https://ai-assistance-for-students.vercel.app",
+            ]
+            for origin in always:
+                if origin not in v:
+                    v.append(origin)
         return v
 
     # File Upload
