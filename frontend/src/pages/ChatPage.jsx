@@ -209,16 +209,29 @@ export default function ChatPage() {
               <p>{error}</p>
               <div className="mt-2 flex gap-2 justify-center">
                 {lastFailedMessage && (
-                  <button
-                    onClick={() => {
-                      setLoading(false);
-                      setInput(lastFailedMessage);
-                      setTimeout(() => handleSend({ preventDefault: () => {} }), 0);
-                    }}
-                    className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition-colors"
-                  >
-                    Retry
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        setActiveChatId(null);
+                        setLoading(false);
+                        setInput(lastFailedMessage);
+                        setTimeout(() => handleSend({ preventDefault: () => {} }), 0);
+                      }}
+                      className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors"
+                    >
+                      New Chat
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLoading(false);
+                        setInput(lastFailedMessage);
+                        setTimeout(() => handleSend({ preventDefault: () => {} }), 0);
+                      }}
+                      className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition-colors"
+                    >
+                      Retry
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={async () => {
