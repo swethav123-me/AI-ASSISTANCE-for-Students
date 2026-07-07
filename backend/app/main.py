@@ -16,8 +16,15 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
 
-    if settings.LLM_PROVIDER == "groq" and settings.GROQ_API_KEY:
-        logger.info(f"Using Groq cloud API with model '{settings.GROQ_MODEL}'")
+    if settings.LLM_PROVIDER == "groq":
+        if settings.GROQ_API_KEY:
+            logger.info(f"Using Groq cloud API with model '{settings.GROQ_MODEL}'")
+        else:
+            logger.warning(
+                "LLM_PROVIDER=groq but GROQ_API_KEY is not set! "
+                "Agent chat will fail with 401. "
+                "Set GROQ_API_KEY in Render environment variables."
+            )
     else:
         try:
             import ollama

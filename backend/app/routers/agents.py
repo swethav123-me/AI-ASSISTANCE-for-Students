@@ -90,7 +90,13 @@ async def chat_with_agent(
                 f"The model '{settings.OLLAMA_MODEL}' doesn't support this request format. "
                 f"Try a different model like 'llama3.2' or 'mistral'."
             )
-        raise ExternalServiceError(f"Ollama error: {err_msg}")
+        if "401" in err_msg or "unauthorized" in err_msg.lower() or "invalid api key" in err_msg.lower():
+            raise ExternalServiceError(
+                "AI service unavailable: Invalid or missing Groq API key. "
+                "Set a valid GROQ_API_KEY in the Render dashboard environment variables."
+            )
+        provider = settings.LLM_PROVIDER
+        raise ExternalServiceError(f"{provider.capitalize()} error: {err_msg}")
 
     assistant_msg = Message(
         chat_id=chat.id,
