@@ -79,11 +79,37 @@ export default function ChatPage() {
   };
 
   const doSend = async (text, chatId) => {
-    const { data } = await api.post('/agents/chat', {
-      message: text,
-      agent_type: agentType,
-      chat_id: chatId,
-    });
+    const token = localStorage.getItem('access_token');
+    const API_BASE = import.meta.env.VITE_API_URL || 'https://ai-assistance-for-students-2.onrender.com';
+    const url = `${API_BASE}/agents/chat`;
+    const body = JSON.stringify({ message: text, agent_type: agentType, chat_id: chatId });
+    console.log('[ChatPage] Sending fetch POST to:', url);
+    console.log('[ChatPage] Request body:', body);
+    let response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body,
+      });
+    } catch (fetchErr) {
+      console.error('[ChatPage] Fetch threw (network error):', fetchErr);
+      throw new Error(`Network error: ${fetchErr.message}`);
+    }
+    console.log('[ChatPage] Response status:', response.status, response.statusText);
+    if (!response.ok) {
+      let detail = `HTTP ${response.status}`;
+      try {
+        const errBody = await response.json();
+        detail = errBody.detail || detail;
+      } catch {}
+      throw new Error(detail);
+    }
+    const data = await response.json();
+    console.log('[ChatPage] Response data:', data);
     const assistantMessage = { role: 'assistant', content: data.response };
     setMessages((prev) => [...prev, assistantMessage]);
     if (!chatId) {
@@ -112,10 +138,9 @@ export default function ChatPage() {
     try {
       await doSend(text, activeChatId);
     } catch (err) {
-      let msg = err.response?.data?.detail || err.message || 'Failed to send message';
-      if (!err.response) {
-        msg = `No response from server. Check if https://ai-assistance-for-students-2.onrender.com is reachable. (${err.message})`;
-      }
+      console.error('[ChatPage] Chat request failed:', err);
+      let msg = err.message || 'Failed to send message';
+      msg += ' | Check browser console (F12) for details.';
       setError(msg);
       setMessages((prev) => prev.slice(0, -1));
       setLastFailedMessage(text);
