@@ -1,10 +1,10 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import init_db, close_db
 from app.core.logging import setup_logging, logger
 from app.core.exceptions import AppException
+from app.core.cors_middleware import RegexCORSMiddleware
 from app.routers.auth import router as auth_router
 from app.routers.agents import router as agents_router
 from app.routers.documents import router as documents_router
@@ -58,14 +58,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(RegexCORSMiddleware)
 
 
 @app.exception_handler(AppException)
