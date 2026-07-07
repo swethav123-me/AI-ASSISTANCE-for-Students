@@ -48,7 +48,7 @@ class Settings(BaseSettings):
 
     # Groq Configuration (cloud, free tier)
     GROQ_API_KEY: str = ""
-    GROQ_MODEL: str = "gemma2-9b-it"
+    GROQ_MODEL: str = "llama-3.1-8b-instant"
 
     # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
