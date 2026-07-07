@@ -33,6 +33,21 @@ async def get_agents():
     return {"agents": list_agents()}
 
 
+@router.get("/debug")
+async def debug_config():
+    from app.services.ollama_service import llm_service
+    key = settings.GROQ_API_KEY
+    return {
+        "provider": settings.LLM_PROVIDER,
+        "groq_key_set": bool(key),
+        "groq_key_length": len(key) if key else 0,
+        "groq_key_preview": key[:10] + "..." if len(key) > 10 else "too-short",
+        "groq_client_initialized": llm_service.groq_client is not None,
+        "groq_model": settings.GROQ_MODEL,
+        "environment": settings.ENVIRONMENT,
+    }
+
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_agent(
     request: ChatRequest,
