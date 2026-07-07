@@ -3,6 +3,8 @@ from starlette.datastructures import Headers, MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from app.core.config import settings
 
+ALLOW_HEADERS = "Content-Type, Authorization, Origin, Accept, X-Requested-With"
+
 
 class RegexCORSMiddleware:
     def __init__(self, app: ASGIApp):
@@ -17,6 +19,18 @@ class RegexCORSMiddleware:
             return True
         return False
 
+    def cors_headers(self, origin: str) -> dict:
+        if not origin or not self.origin_allowed(origin):
+            return {}
+        return {
+            "access-control-allow-origin": origin,
+            "access-control-allow-credentials": "true",
+            "access-control-allow-methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+            "access-control-allow-headers": ALLOW_HEADERS,
+            "access-control-max-age": "86400",
+            "vary": "Origin",
+        }
+
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
@@ -27,41 +41,16 @@ class RegexCORSMiddleware:
         method = scope.get("method", "GET")
 
         if method == "OPTIONS":
-            res_headers = {}
-            if origin and self.origin_allowed(origin):
-                res_headers["access-control-allow-origin"] = origin
-                res_headers["access-control-allow-credentials"] = "true"
-                res_headers["access-control-allow-methods"] = "*"
-                res_headers["access-control-allow-headers"] = "*"
-                res_headers["access-control-max-age"] = "86400"
-            response_sent = False
-
-            async def send_preflight(msg: Message) -> None:
-                nonlocal response_sent
-                if msg["type"] == "http.response.start":
-                    response_sent = True
-                    msg["status"] = 204
-                    for k, v in res_headers.items():
-                        msg["headers"].append((k.encode(), v.encode()))
-                await send(msg)
-
-            if not response_sent:
-                await send({
-                    "type": "http.response.start",
-                    "status": 204,
-                    "headers": [(k.encode(), v.encode()) for k, v in res_headers.items()],
-                })
-                await send({"type": "http.response.body", "body": b""})
+            ch = self.cors_headers(origin)
+            h = [(k.encode(), v.encode()) for k, v in ch.items()]
+            await send({"type": "http.response.start", "status": 204, "headers": h})
+            await send({"type": "http.response.body", "body": b""})
             return
 
         async def send_with_cors(msg: Message) -> None:
             if msg["type"] == "http.response.start":
-                if origin and self.origin_allowed(origin):
-                    mutable = MutableHeaders(scope=msg)
-                    mutable.append("access-control-allow-origin", origin)
-                    mutable.append("access-control-allow-credentials", "true")
-                    mutable.append("access-control-allow-methods", "*")
-                    mutable.append("access-control-allow-headers", "*")
+                for k, v in self.cors_headers(origin).items():
+                    MutableHeaders(scope=msg).append(k, v)
             await send(msg)
 
         await self.app(scope, receive, send_with_cors)
