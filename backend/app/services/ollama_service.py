@@ -8,7 +8,7 @@ class LLMService:
     def __init__(self):
         self.provider = settings.LLM_PROVIDER
         self.ollama_client = ollama.Client(host=settings.OLLAMA_BASE_URL)
-        groq_key = settings.GROQ_API_KEY.strip() if settings.GROQ_API_KEY else ""
+        groq_key = settings.GROQ_API_KEY.strip().strip("'\"") if settings.GROQ_API_KEY else ""
         self.groq_client = Groq(api_key=groq_key) if groq_key else None
 
     def chat(self, messages: list[dict]) -> str:
