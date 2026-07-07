@@ -87,7 +87,9 @@ async def chat_with_agent(
     ollama_messages = []
     for m in messages[-4:]:
         role = "user" if m.role == "user" else "assistant"
-        ollama_messages.append({"role": role, "content": m.content})
+        content = m.content
+        if content:
+            ollama_messages.append({"role": role, "content": content})
 
     ollama_messages.insert(0, {"role": "system", "content": agent.system_prompt})
 
