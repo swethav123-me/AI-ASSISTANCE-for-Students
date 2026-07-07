@@ -107,7 +107,8 @@ export default function ChatPage() {
         ]);
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to send message');
+      const msg = err.response?.data?.detail || err.message || 'Failed to send message';
+      setError(msg);
       setMessages((prev) => prev.slice(0, -1));
     } finally {
       setLoading(false);
