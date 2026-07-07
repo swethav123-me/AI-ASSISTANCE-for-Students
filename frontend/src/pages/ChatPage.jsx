@@ -112,7 +112,10 @@ export default function ChatPage() {
     try {
       await doSend(text, activeChatId);
     } catch (err) {
-      const msg = err.response?.data?.detail || err.message || 'Failed to send message';
+      let msg = err.response?.data?.detail || err.message || 'Failed to send message';
+      if (!err.response) {
+        msg = `No response from server. Check if https://ai-assistance-for-students-2.onrender.com is reachable. (${err.message})`;
+      }
       setError(msg);
       setMessages((prev) => prev.slice(0, -1));
       setLastFailedMessage(text);
