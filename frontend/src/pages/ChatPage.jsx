@@ -26,6 +26,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [initialLoading, setInitialLoading] = useState(true);
+  const [lastFailedMessage, setLastFailedMessage] = useState('');
 
   const info = agentInfo[agentType] || { icon: '🤖', name: 'AI Agent', color: 'gray' };
 
@@ -77,6 +78,24 @@ export default function ChatPage() {
     loadMessages(chatId);
   };
 
+  const doSend = async (text, chatId) => {
+    const { data } = await api.post('/agents/chat', {
+      message: text,
+      agent_type: agentType,
+      chat_id: chatId,
+    });
+    const assistantMessage = { role: 'assistant', content: data.response };
+    setMessages((prev) => [...prev, assistantMessage]);
+    if (!chatId) {
+      setActiveChatId(data.chat_id);
+      setChats((prev) => [
+        { id: data.chat_id, title: text.slice(0, 50), agent_type: agentType },
+        ...prev,
+      ]);
+    }
+    setError('');
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     const text = input.trim();
@@ -84,32 +103,20 @@ export default function ChatPage() {
 
     setInput('');
     setError('');
+    setLastFailedMessage('');
 
     const userMessage = { role: 'user', content: text };
     setMessages((prev) => [...prev, userMessage]);
 
     setLoading(true);
     try {
-      const { data } = await api.post('/agents/chat', {
-        message: text,
-        agent_type: agentType,
-        chat_id: activeChatId,
-      });
-
-      const assistantMessage = { role: 'assistant', content: data.response };
-      setMessages((prev) => [...prev, assistantMessage]);
-
-      if (!activeChatId) {
-        setActiveChatId(data.chat_id);
-        setChats((prev) => [
-          { id: data.chat_id, title: text.slice(0, 50), agent_type: agentType },
-          ...prev,
-        ]);
-      }
+      await doSend(text, activeChatId);
     } catch (err) {
       const msg = err.response?.data?.detail || err.message || 'Failed to send message';
       setError(msg);
       setMessages((prev) => prev.slice(0, -1));
+      setLastFailedMessage(text);
+      setInput(text);
     } finally {
       setLoading(false);
     }
@@ -196,7 +203,15 @@ export default function ChatPage() {
 
           {error && (
             <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm text-center">
-              {error}
+              <p>{error}</p>
+              {lastFailedMessage && (
+                <button
+                  onClick={() => handleSend({ preventDefault: () => {} })}
+                  className="mt-2 px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition-colors"
+                >
+                  Retry
+                </button>
+              )}
             </div>
           )}
 
