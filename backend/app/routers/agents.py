@@ -85,7 +85,7 @@ async def chat_with_agent(
     messages = history.scalars().all()
 
     ollama_messages = []
-    for m in messages[-10:]:
+    for m in messages[-4:]:
         role = "user" if m.role == "user" else "assistant"
         ollama_messages.append({"role": role, "content": m.content})
 
