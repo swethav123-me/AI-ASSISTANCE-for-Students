@@ -132,21 +132,11 @@ def create_refresh_token(
     return encoded_jwt
 
 
-def decode_token(token: str) -> dict:
-    """
-    Decode and validate a JWT token.
-
-    Args:
-        token: JWT token string
-
-    Returns:
-        Decoded token payload
-
-    Raises:
-        jwt.JWTError: If token is invalid or expired
-    """
-    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-    return payload
+def decode_token(token: str) -> dict | None:
+    try:
+        return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    except Exception:
+        return None
 
 
 def verify_token(token: str, token_type: str = "access") -> Optional[dict]:
