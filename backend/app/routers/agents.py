@@ -84,14 +84,13 @@ async def chat_with_agent(
     )
     messages = history.scalars().all()
 
-    ollama_messages = []
+    ollama_messages = [{"role": "system", "content": agent.system_prompt}]
     for m in messages[-4:]:
-        role = "user" if m.role == "user" else "assistant"
-        content = m.content
-        if content:
-            ollama_messages.append({"role": role, "content": content})
-
-    ollama_messages.insert(0, {"role": "system", "content": agent.system_prompt})
+        context = m.content
+        if m.role == "user":
+            ollama_messages.append({"role": "user", "content": context})
+        else:
+            ollama_messages.append({"role": "assistant", "content": context[:200]})
 
     try:
         response_text = agent.chat(ollama_messages)
