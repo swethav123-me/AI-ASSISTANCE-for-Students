@@ -207,14 +207,34 @@ export default function ChatPage() {
           {error && (
             <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm text-center">
               <p>{error}</p>
-              {lastFailedMessage && (
+              <div className="mt-2 flex gap-2 justify-center">
+                {lastFailedMessage && (
+                  <button
+                    onClick={() => {
+                      setLoading(false);
+                      setInput(lastFailedMessage);
+                      setTimeout(() => handleSend({ preventDefault: () => {} }), 0);
+                    }}
+                    className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition-colors"
+                  >
+                    Retry
+                  </button>
+                )}
                 <button
-                  onClick={() => handleSend({ preventDefault: () => {} })}
-                  className="mt-2 px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition-colors"
+                  onClick={async () => {
+                    try {
+                      const resp = await fetch('https://ai-assistance-for-students-2.onrender.com/health');
+                      const ok = resp.ok ? 'OK' : 'FAIL';
+                      alert(`Backend reachable: ${ok} (status ${resp.status})`);
+                    } catch(e) {
+                      alert(`Cannot reach backend: ${e.message}`);
+                    }
+                  }}
+                  className="px-4 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-medium transition-colors"
                 >
-                  Retry
+                  Test Connection
                 </button>
-              )}
+              </div>
             </div>
           )}
 
